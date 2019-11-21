@@ -11,11 +11,13 @@ import entidades.Entidade;
 import entidades.Robo;
 import entidades.Virus;
 import excecoes.ExcecaoMorte;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
+import util.JSONUtil;
 
 /**
  *
@@ -28,55 +30,21 @@ public class Controlador extends javax.swing.JFrame {
     Robo robo1;
     Robo robo2;
 
+    Thread threadJogo;
+    boolean executando = false;
+    boolean fimDeJogo = true;
+
     /**
      * Creates new form Jogo
      */
     public Controlador() {
         initComponents();
 
-        robo1 = new Robo("robo5.png");
-        robo1.setXY(4, 1);
-        robo1.setNome("Robo1");
-        robo2 = new Robo("robo2.png");
-        robo2.setXY(4, 8);
-        robo2.setNome("Robo2");
-
-        robo1.setOponente(robo2);
-        robo2.setOponente(robo1);
-
-        arena.novaEntidade(robo1);
-        arena.novaEntidade(robo2);
-
-        Arma arma1 = new Arma("arma1-2.png", 5, 10, 0.5f);
-        arma1.inicializa();
-        robo1.setArma(arma1);
-
-        Arma arma2 = new Arma("arma3-1.png", 5, 10, 0.5f);
-        arma2.inicializa();
-        robo2.setArma(arma2);
-
-        Arma armaNoChao = new Arma("arma1-1.png", 10, 20, 0.5f);
-        armaNoChao.setXY(4, 2);
-        arena.novaEntidade(armaNoChao);
-
-        Bomba bomba = new Bomba(1);
-        bomba.setXY(5, 1);
-        arena.novaEntidade(bomba);
-        Bomba bomba2 = new Bomba(1);
-        bomba2.setXY(3, 1);
-        arena.novaEntidade(bomba2);
-
-        Virus virus = new Virus(5);
-        virus.setXY(4, 0);
-        arena.novaEntidade(virus);
-
         try {
             this.threadJogo();
         } catch (InterruptedException ex) {
             Logger.getLogger(Controlador.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-        inicializaGUI();
         MyLogger.listen(this::log);
     }
 
@@ -90,21 +58,22 @@ public class Controlador extends javax.swing.JFrame {
                     } catch (InterruptedException ex) {
                         Logger.getLogger(Controlador.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    Entidade colisao;
-                    try {
-                        if (turno > 0) {
-                            colisao = robo1.executaTurno();
-                        } else {
-                            colisao = robo2.executaTurno();
+                    if (executando) {
+                        try {
+                            if (turno > 0) {
+                                lidaComColisao(robo1, robo1.executaTurno());
+                            } else {
+                                lidaComColisao(robo2, robo2.executaTurno());
+                            }
+                        } catch (ExcecaoMorte ex) {
+                            JOptionPane.showMessageDialog(rootPane, "Fim do jogo\n" + ex.getMorto().getNome() + " morreu");
+                            fimDeJogo = true;
+                            executando = false;
                         }
-                        lidaComColisao(robo1, colisao);
-                    } catch (ExcecaoMorte ex) {
-                        JOptionPane.showMessageDialog(rootPane, "Fim do jogo\n" + ex.getMorto().getNome() + " morreu");
-                        System.exit(0);
-                    }
 
-                    turno *= -1;
-                    atualizaGUI();
+                        turno *= -1;
+                        atualizaGUIInfos();
+                    }
                 }
             }
         }.start();
@@ -123,8 +92,8 @@ public class Controlador extends javax.swing.JFrame {
         if (colisao instanceof Arma) {
             Arma arma = (Arma) colisao;
             int resp = JOptionPane.showOptionDialog(rootPane,
-                    "Deseja trocar de arma?\nDano: " + arma.getDano() + "\nAlcance: " + arma.getAlcance() + "\nChance de tiro: " + arma.getChanceTiro(),
-                    "Você encontrou uma arma",
+                    "Deseja pegar a arma " + arma.getNome() + "?\nDano: " + arma.getDano() + "\nAlcance: " + arma.getAlcance() + "\nChance de tiro: " + arma.getChanceTiro(),
+                    turno > 0 ? "Jogador 1" : "Jogador 2",
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.INFORMATION_MESSAGE,
                     new javax.swing.ImageIcon(getClass().getResource("/imagens/" + arma.getImagem())),
@@ -133,7 +102,7 @@ public class Controlador extends javax.swing.JFrame {
             );
             if (resp == JOptionPane.YES_OPTION) {
                 robo.setArma(arma);
-
+                atualizaGUIImagens();
                 MyLogger.log(robo.getNome() + " trocou de arma");
             }
             return;
@@ -145,7 +114,53 @@ public class Controlador extends javax.swing.JFrame {
 
     }
 
-    private void inicializaGUI() {
+    private void inicializaJogo(Robo robo1, Robo robo2, Arma arma1, Arma arma2) {
+        arena.reset();
+        robo1.setXY(4, 1);
+        robo2.setXY(4, 8);
+
+        robo1.setOponente(robo2);
+        robo2.setOponente(robo1);
+
+        arena.novaEntidade(robo1);
+        arena.novaEntidade(robo2);
+
+        this.robo1 = robo1;
+        this.robo2 = robo2;
+
+        arma1.inicializa();
+        robo1.setArma(arma1);
+
+        arma2.inicializa();
+        robo2.setArma(arma2);
+
+        ArrayList<Arma> armas = JSONUtil.getArmas(false);
+        for (int i = 0; i < 15; i++) {
+            Arma arma = armas.get((int) (Math.random() * armas.size()));
+            int[] pos = arena.getPosicaoAleatoriaVazia();
+            arma.setXY(pos[0], pos[1]);
+            arena.novaEntidade(arma);
+        }
+        for (int i = 0; i < 5; i++) {
+            Bomba bomba = new Bomba(2);
+            int[] pos = arena.getPosicaoAleatoriaVazia();
+            bomba.setXY(pos[0], pos[1]);
+            arena.novaEntidade(bomba);
+        }
+        for (int i = 0; i < 5; i++) {
+            Virus virus = new Virus(3);
+            int[] pos = arena.getPosicaoAleatoriaVazia();
+            virus.setXY(pos[0], pos[1]);
+            arena.novaEntidade(virus);
+        }
+
+        atualizaGUIImagens();
+        executando = false;
+        fimDeJogo = false;
+        btControle.setText("Iniciar");
+    }
+
+    private void atualizaGUIImagens() {
         lblRobo1.setIcon(new ImageIcon(getClass().getResource("/imagens/" + robo1.getImagem())));
         lblArma1.setIcon(new ImageIcon(getClass().getResource("/imagens/" + robo1.getArma().getImagem())));
         lblRobo2.setIcon(new ImageIcon(getClass().getResource("/imagens/" + robo2.getImagem())));
@@ -154,7 +169,7 @@ public class Controlador extends javax.swing.JFrame {
         lblRobo1.repaint();
     }
 
-    private void atualizaGUI() {
+    private void atualizaGUIInfos() {
         lblVida1.setText(robo1.getVida() + "");
         lblDano1.setText(robo1.getArma().getDano() + "");
         lblAlcance1.setText(robo1.getArma().getAlcance() + "");
@@ -166,7 +181,7 @@ public class Controlador extends javax.swing.JFrame {
     }
 
     private void log(Object mensagem) {
-        ((DefaultListModel) lstLog.getModel()).addElement(mensagem);
+        ((DefaultListModel) lstLog.getModel()).add(0, mensagem);
     }
 
     /**
@@ -203,6 +218,7 @@ public class Controlador extends javax.swing.JFrame {
         lblChance2 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         lstLog = new javax.swing.JList<>();
+        btControle = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         mnuNovoJogo = new javax.swing.JMenuItem();
@@ -230,27 +246,18 @@ public class Controlador extends javax.swing.JFrame {
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Robô 1"));
 
         lblArma1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblArma1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagens/arma1-1.png"))); // NOI18N
 
         jLabel2.setText("Vida:");
 
         lblVida1.setFont(new java.awt.Font("Tahoma", 0, 36)); // NOI18N
-        lblVida1.setText("20");
 
         lblRobo1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblRobo1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagens/robo1.png"))); // NOI18N
 
         jLabel6.setText("Dano:");
 
         jLabel7.setText("Alcance:");
 
         jLabel8.setText("Chance de tiro:");
-
-        lblDano1.setText("5");
-
-        lblAlcance1.setText("10");
-
-        lblChance1.setText("50%");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -312,27 +319,18 @@ public class Controlador extends javax.swing.JFrame {
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Robô 2"));
 
         lblArma2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblArma2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagens/arma4-3.png"))); // NOI18N
 
         jLabel13.setText("Vida:");
 
         lblVida2.setFont(new java.awt.Font("Tahoma", 0, 36)); // NOI18N
-        lblVida2.setText("20");
 
         lblRobo2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblRobo2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagens/robo3.png"))); // NOI18N
 
         jLabel16.setText("Dano:");
 
         jLabel17.setText("Alcance:");
 
         jLabel18.setText("Chance de tiro:");
-
-        lblDano2.setText("15");
-
-        lblAlcance2.setText("6");
-
-        lblChance2.setText("40%");
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -394,6 +392,13 @@ public class Controlador extends javax.swing.JFrame {
         lstLog.setModel(new DefaultListModel<>());
         jScrollPane1.setViewportView(lstLog);
 
+        btControle.setText("Iniciar");
+        btControle.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btControleActionPerformed(evt);
+            }
+        });
+
         jMenu1.setText("Arquivo");
 
         mnuNovoJogo.setText("Novo jogo");
@@ -421,14 +426,15 @@ public class Controlador extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jScrollPane1)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                    .addComponent(btControle, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(arena, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(layout.createSequentialGroup()
@@ -436,16 +442,29 @@ public class Controlador extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane1)))
-                .addContainerGap(16, Short.MAX_VALUE))
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btControle)))
+                .addGap(3, 3, 3))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void mnuNovoJogoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mnuNovoJogoActionPerformed
-        // TODO add your handling code here:
+        DialogNovoJogo dialog = new DialogNovoJogo(this, true);
+        dialog.setVisible(true);
+        inicializaJogo(dialog.getRoboJogador1(), dialog.getRoboJogador2(), dialog.getArmaJogador1(), dialog.getArmaJogador2());
+        dialog.dispose();
     }//GEN-LAST:event_mnuNovoJogoActionPerformed
+
+    private void btControleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btControleActionPerformed
+        if (fimDeJogo) {
+            return;
+        }
+        executando = !executando;
+        btControle.setText(executando ? "Pausar" : "Resumir");
+    }//GEN-LAST:event_btControleActionPerformed
 
     /**
      * @param args the command line arguments
@@ -485,6 +504,7 @@ public class Controlador extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private jogo.Arena arena;
+    private javax.swing.JButton btControle;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;

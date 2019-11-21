@@ -8,6 +8,7 @@ package entidades;
 import excecoes.ExcecaoMorte;
 import jogo.Arena;
 import jogo.MyLogger;
+import org.json.simple.JSONObject;
 
 /**
  *
@@ -30,6 +31,22 @@ public class Arma extends ItemEspecial {
         this.nome = "Arma";
     }
 
+    public Arma(JSONObject obj) {
+        super((String) obj.get("imagem"));
+        this.nome = (String) obj.get("nome");
+        this.dano = ((Long) obj.get("dano")).intValue();
+        this.alcance = ((Long) obj.get("alcance")).intValue();
+        this.chanceTiro = ((Double) obj.get("chance")).floatValue();
+    }
+
+    private Arma(String imagem, String nome, int dano, int alcance, float chanceTiro) {
+        super(imagem);
+        this.nome = nome;
+        this.dano = dano;
+        this.alcance = alcance;
+        this.chanceTiro = chanceTiro;
+    }
+
     public int getAlcance() {
         return alcance;
     }
@@ -47,7 +64,9 @@ public class Arma extends ItemEspecial {
     }
 
     void atira(Robo robo, int distancia) throws ExcecaoMorte {
-        int dano = 1 + (int) ((this.dano / distancia) * Math.random());
+        //Super fórmula secreta de dano
+        System.out.println(distancia+" "+alcance+" "+((float)distancia/(float)alcance));
+        int dano = (int) Math.max(((int) ((this.dano * (distancia / alcance)) * (1 + Math.random())) - (robo.getArmadura() * Math.random())), 1);
 
         MyLogger.log(robo.getNome() + " levou " + dano + " de dano de: " + nome);
         robo.daDano(dano);
@@ -55,6 +74,10 @@ public class Arma extends ItemEspecial {
 
     public String getChancePorcento() {
         return ((int) (chanceTiro * 100)) + "%";
+    }
+
+    public Arma clone() {
+        return new Arma(imagem, nome, dano, alcance, chanceTiro);
     }
 
 }

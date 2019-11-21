@@ -1,0 +1,122 @@
+[
+    {
+        "nome": "Blue I",
+        "imagem": "arma1-1.png",
+        "dano": 15,
+        "alcance": 3,
+        "chance": 0.75,
+        "inicial": true
+    },
+    {
+        "nome": "Blue II",
+        "imagem": "arma1-2.png",
+        "dano": 15,
+        "alcance": 5,
+        "chance": 0.55,
+        "inicial": false
+    },
+    {
+        "nome": "Blue III",
+        "imagem": "arma1-3.png",
+        "dano": 10,
+        "alcance": 3,
+        "chance": 0.95,
+        "inicial": false
+    },
+    {
+        "nome": "Green I",
+        "imagem": "arma3-1.png",
+        "dano": 12,
+        "alcance": 5,
+        "chance": 0.65,
+        "inicial": true
+    },
+    {
+        "nome": "Green II",
+        "imagem": "arma3-2.png",
+        "dano": 12,
+        "alcance": 7,
+        "chance": 0.45,
+        "inicial": false
+    },
+    {
+        "nome": "Green III",
+        "imagem": "arma3-3.png",
+        "dano": 7,
+        "alcance": 5,
+        "chance": 0.85,
+        "inicial": false
+    },
+    {
+        "nome": "White I",
+        "imagem": "arma5-1.png",
+        "dano": 9,
+        "alcance": 7,
+        "chance": 0.55,
+        "inicial": true
+    },
+    {
+        "nome": "White II",
+        "imagem": "arma5-2.png",
+        "dano": 9,
+        "alcance": 9,
+        "chance": 0.45,
+        "inicial": false
+    },
+    {
+        "nome": "White III",
+        "imagem": "arma5-3.png",
+        "dano": 4,
+        "alcance": 7,
+        "chance": 0.75,
+        "inicial": false
+    },
+    {
+        "nome": "Red I",
+        "imagem": "arma4-1.png",
+        "dano": 6,
+        "alcance": 9,
+        "chance": 0.45,
+        "inicial": true
+    },
+    {
+        "nome": "Red II",
+        "imagem": "arma4-2.png",
+        "dano": 6,
+        "alcance": 11,
+        "chance": 0.35,
+        "inicial": false
+    },
+    {
+        "nome": "Red III",
+        "imagem": "arma4-3.png",
+        "dano": 4,
+        "alcance": 7,
+        "chance": 0.65,
+        "inicial": false
+    },
+    {
+        "nome": "Black I",
+        "imagem": "arma2-1.png",
+        "dano": 3,
+        "alcance": 11,
+        "chance": 0.35,
+        "inicial": true
+    },
+    {
+        "nome": "Black II",
+        "imagem": "arma2-2.png",
+        "dano": 3,
+        "alcance": 14,
+        "chance": 0.25,
+        "inicial": false
+    },
+    {
+        "nome": "Black III",
+        "imagem": "arma2-3.png",
+        "dano": 2,
+        "alcance": 9,
+        "chance": 0.55,
+        "inicial": false
+    }
+]

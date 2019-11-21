@@ -1,0 +1,32 @@
+[
+    {
+        "nome": "Robô Azul",
+        "imagem": "robo1.png",
+        "vida": 30,
+        "armadura": 1
+    },
+    {
+        "nome": "Robô Verde",
+        "imagem": "robo3.png",
+        "vida": 25,
+        "armadura": 2
+    },
+    {
+        "nome": "Robô Branco",
+        "imagem": "robo5.png",
+        "vida": 20,
+        "armadura": 3
+    },
+    {
+        "nome": "Robô Vermelho",
+        "imagem": "robo4.png",
+        "vida": 15,
+        "armadura": 4
+    },
+    {
+        "nome": "Robô Preto",
+        "imagem": "robo2.png",
+        "vida": 10,
+        "armadura": 5
+    }
+]

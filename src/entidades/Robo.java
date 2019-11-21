@@ -8,8 +8,7 @@ package entidades;
 import excecoes.ExcecaoMorte;
 import java.util.ArrayList;
 import java.util.Iterator;
-import jogo.Arena;
-import jogo.MyLogger;
+import org.json.simple.JSONObject;
 
 /**
  *
@@ -17,16 +16,39 @@ import jogo.MyLogger;
  */
 public class Robo extends Entidade {
 
-    final int MAX_VIDA = 20;
-    int vida;
-    Arma arma;
-    Robo oponente;
+    private int maxVida = 20;
+    private int maxArmadura = 20;
+    private int vida;
+    private int armadura;
+    private Arma arma;
+    private Robo oponente;
 
     ArrayList<Virus> virus;
 
     public Robo(String imagem) {
         super(imagem);
-        vida = MAX_VIDA;
+        vida = maxVida;
+        armadura = maxArmadura;
+        virus = new ArrayList<>();
+    }
+
+    public Robo(JSONObject obj) {
+        super((String) obj.get("imagem"));
+        this.maxVida = ((Long) obj.get("vida")).intValue();
+        this.maxArmadura = ((Long) obj.get("armadura")).intValue();
+        this.nome = (String) obj.get("nome");
+        this.vida = maxVida;
+        this.armadura = maxArmadura;
+        virus = new ArrayList<>();
+    }
+
+    public Robo(String nome, int vida, int armadura, String imagem) {
+        super(imagem);
+        this.nome = nome;
+        this.maxVida = vida;
+        this.maxArmadura = armadura;
+        this.vida = maxVida;
+        this.armadura = maxArmadura;
         virus = new ArrayList<>();
     }
 
@@ -106,6 +128,14 @@ public class Robo extends Entidade {
 
     public int getVida() {
         return vida;
+    }
+
+    public int getArmadura() {
+        return armadura;
+    }
+
+    public Robo clone() {
+        return new Robo(nome, vida, armadura, imagem);
     }
 
 }

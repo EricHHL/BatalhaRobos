@@ -75,13 +75,13 @@ public class Arena extends JPanel {
                 return retorno;
             } else {
                 this.remove(retorno);
+                this.entidades[x][y] = null;
             }
         }
 
         this.entidades[x][y] = entidade;
 
         entidade.setPosX(x);
-
         entidade.setPosY(y);
 
         this.repaintEntidade(entidade);
@@ -100,5 +100,22 @@ public class Arena extends JPanel {
                 arma.repaint();
             }
         }
+    }
+
+    public int[] getPosicaoAleatoriaVazia() {
+        int x, y;
+        do {
+            x = (int) (Math.random() * tam);
+            y = (int) (Math.random() * tam);
+        } while (entidades[x][y] != null);
+
+        return new int[]{x, y};
+
+    }
+
+    void reset() {
+        removeAll();
+        revalidate();
+        entidades = new Entidade[tam][tam];
     }
 }
