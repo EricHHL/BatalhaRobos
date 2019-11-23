@@ -6,7 +6,6 @@
 package entidades;
 
 import excecoes.ExcecaoMorte;
-import jogo.Arena;
 import jogo.MyLogger;
 import org.json.simple.JSONObject;
 
@@ -65,7 +64,6 @@ public class Arma extends ItemEspecial {
 
     void atira(Robo robo, int distancia) throws ExcecaoMorte {
         //Super fórmula secreta de dano
-        System.out.println(distancia+" "+alcance+" "+((float)distancia/(float)alcance));
         int dano = (int) Math.max(((int) ((this.dano * (distancia / alcance)) * (1 + Math.random())) - (robo.getArmadura() * Math.random())), 1);
 
         MyLogger.log(robo.getNome() + " levou " + dano + " de dano de: " + nome);

@@ -26,12 +26,13 @@ public class Arena extends JPanel {
         int x = entidade.getPosX();
         int y = entidade.getPosY();
         if (x < 0 || x > tam || y < 0 || y > tam) {
-            System.out.println("Nova entidade sendo criada na posicao invalida [" + x + "," + y + "]");
+            //System.out.println("Nova entidade sendo criada na posicao invalida [" + x + "," + y + "]");;
             return;
         }
 
         if (this.entidades[x][y] != null) {
-            System.out.println("Nova entidade sendo criada em posicao ocupada[" + x + "," + y + "]");
+            //System.out.println("Nova entidade sendo criada em posicao ocupada[" + x + "," + y + "]");
+            return;
         }
 
         entidade.setArena(this);
@@ -118,4 +119,13 @@ public class Arena extends JPanel {
         revalidate();
         entidades = new Entidade[tam][tam];
     }
+
+    public Entidade[][] getEntidades() {
+        return entidades;
+    }
+
+    public void setEntidades(Entidade[][] entidades) {
+        this.entidades = entidades;
+    }
+    
 }

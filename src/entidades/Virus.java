@@ -6,7 +6,6 @@
 package entidades;
 
 import excecoes.ExcecaoMorte;
-import jogo.Arena;
 import jogo.MyLogger;
 
 /**
@@ -36,5 +35,14 @@ public class Virus extends ItemEspecial {
         vidaEmTurnos--;
         return vidaEmTurnos > 0;
     }
+
+    public int getVidaEmTurnos() {
+        return vidaEmTurnos;
+    }
+
+    public void setVidaEmTurnos(int vidaEmTurnos) {
+        this.vidaEmTurnos = vidaEmTurnos;
+    }
+    
 
 }

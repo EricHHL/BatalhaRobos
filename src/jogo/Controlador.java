@@ -11,13 +11,19 @@ import entidades.Entidade;
 import entidades.Robo;
 import entidades.Virus;
 import excecoes.ExcecaoMorte;
+import excecoes.SaveCorrompidoException;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.filechooser.FileSystemView;
 import util.JSONUtil;
+import util.JogoSalvo;
 
 /**
  *
@@ -67,6 +73,7 @@ public class Controlador extends javax.swing.JFrame {
                             }
                         } catch (ExcecaoMorte ex) {
                             JOptionPane.showMessageDialog(rootPane, "Fim do jogo\n" + ex.getMorto().getNome() + " morreu");
+                            mnuSalvar.setEnabled(false);
                             fimDeJogo = true;
                             executando = false;
                         }
@@ -119,6 +126,9 @@ public class Controlador extends javax.swing.JFrame {
         robo1.setXY(4, 1);
         robo2.setXY(4, 8);
 
+        robo1.setJogador(1);
+        robo2.setJogador(2);
+
         robo1.setOponente(robo2);
         robo2.setOponente(robo1);
 
@@ -157,7 +167,37 @@ public class Controlador extends javax.swing.JFrame {
         atualizaGUIImagens();
         executando = false;
         fimDeJogo = false;
+        mnuSalvar.setEnabled(true);
         btControle.setText("Iniciar");
+    }
+
+    private void carregaJogo(JogoSalvo save) {
+        arena.reset();
+        turno = save.getTurno();
+        save.getEntidades().forEach((entidade) -> {
+            arena.novaEntidade(entidade);
+            if(entidade instanceof Robo){
+                if(((Robo) entidade).getJogador()==1){
+                    this.robo1 = (Robo) entidade;
+                }else{
+                    this.robo2 = (Robo) entidade;
+                }
+            }
+        });
+        
+        this.robo1.setOponente(robo2);
+        this.robo2.setOponente(robo1);
+        
+        robo1.getArma().inicializa();
+        robo2.getArma().inicializa();
+        
+        executando = false;
+        fimDeJogo = false;
+        mnuSalvar.setEnabled(true);
+        btControle.setText("Iniciar");
+        
+        atualizaGUIImagens();
+        atualizaGUIInfos();
     }
 
     private void atualizaGUIImagens() {
@@ -222,9 +262,12 @@ public class Controlador extends javax.swing.JFrame {
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         mnuNovoJogo = new javax.swing.JMenuItem();
+        mnuSalvar = new javax.swing.JMenuItem();
+        mnuCarregar = new javax.swing.JMenuItem();
         mnuSair = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Batalha de robôs");
         setMinimumSize(null);
 
         arena.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
@@ -409,7 +452,29 @@ public class Controlador extends javax.swing.JFrame {
         });
         jMenu1.add(mnuNovoJogo);
 
+        mnuSalvar.setText("Salvar");
+        mnuSalvar.setEnabled(false);
+        mnuSalvar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnuSalvarActionPerformed(evt);
+            }
+        });
+        jMenu1.add(mnuSalvar);
+
+        mnuCarregar.setText("Carregar");
+        mnuCarregar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnuCarregarActionPerformed(evt);
+            }
+        });
+        jMenu1.add(mnuCarregar);
+
         mnuSair.setText("Sair");
+        mnuSair.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnuSairActionPerformed(evt);
+            }
+        });
         jMenu1.add(mnuSair);
 
         jMenuBar1.add(jMenu1);
@@ -465,6 +530,43 @@ public class Controlador extends javax.swing.JFrame {
         executando = !executando;
         btControle.setText(executando ? "Pausar" : "Resumir");
     }//GEN-LAST:event_btControleActionPerformed
+
+    private void mnuSairActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mnuSairActionPerformed
+        System.exit(0);
+    }//GEN-LAST:event_mnuSairActionPerformed
+
+    private void mnuSalvarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mnuSalvarActionPerformed
+        if (fimDeJogo) {
+            return;
+        }
+        JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+        FileNameExtensionFilter fnef = new FileNameExtensionFilter("Jogos salvos", "brs");
+        jfc.setFileFilter(fnef);
+        int returnValue = jfc.showSaveDialog(null);
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            File f = jfc.getSelectedFile();
+            if (!f.getName().endsWith(".brs")) {
+                f = new File(f.getAbsolutePath() + ".brs");
+            }
+            JSONUtil.salvarJogo(f, arena, turno);
+            JOptionPane.showMessageDialog(null, "Jogo '"+f.getName()+"' salvo com sucesso!");
+        }
+    }//GEN-LAST:event_mnuSalvarActionPerformed
+
+    private void mnuCarregarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mnuCarregarActionPerformed
+        JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+        FileNameExtensionFilter fnef = new FileNameExtensionFilter("Jogos salvos", "brs");
+        jfc.setFileFilter(fnef);
+        int returnValue = jfc.showOpenDialog(null);
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            try {
+                JogoSalvo save = JSONUtil.carregarJogo(jfc.getSelectedFile());
+                this.carregaJogo(save);
+            } catch (SaveCorrompidoException ex) {
+                JOptionPane.showMessageDialog(null, "O arquivo de jogo está corrompido!", "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }//GEN-LAST:event_mnuCarregarActionPerformed
 
     /**
      * @param args the command line arguments
@@ -531,7 +633,9 @@ public class Controlador extends javax.swing.JFrame {
     private javax.swing.JLabel lblVida1;
     private javax.swing.JLabel lblVida2;
     private javax.swing.JList<String> lstLog;
+    private javax.swing.JMenuItem mnuCarregar;
     private javax.swing.JMenuItem mnuNovoJogo;
     private javax.swing.JMenuItem mnuSair;
+    private javax.swing.JMenuItem mnuSalvar;
     // End of variables declaration//GEN-END:variables
 }

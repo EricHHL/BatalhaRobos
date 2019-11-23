@@ -8,6 +8,7 @@ package entidades;
 import excecoes.ExcecaoMorte;
 import java.util.ArrayList;
 import java.util.Iterator;
+import jogo.Arena;
 import org.json.simple.JSONObject;
 
 /**
@@ -22,6 +23,7 @@ public class Robo extends Entidade {
     private int armadura;
     private Arma arma;
     private Robo oponente;
+    private int jogador;
 
     ArrayList<Virus> virus;
 
@@ -59,9 +61,6 @@ public class Robo extends Entidade {
                 i.remove();
             }
         }
-        if (arma != null) {
-            System.out.println(distanciaDoOponente() + " <= " + arma.getAlcance());
-        }
         if (arma != null && distanciaDoOponente() <= arma.getAlcance() && Math.random() < arma.getChanceTiro()) {
             arma.atira(oponente, distanciaDoOponente());
         }
@@ -75,7 +74,6 @@ public class Robo extends Entidade {
 
     //Escolhe uma das 4 direcoes para se locomover e retorna a entidade coma qual colidiu, desde que nao seja outro Robo
     public Entidade moveAleatorio() {
-        System.out.println(this.posX + "," + this.posY);
         int direcao = (int) (Math.random() * 4.0f);
         switch (direcao) {
             case 0:
@@ -102,9 +100,10 @@ public class Robo extends Entidade {
         }
 
         this.arma = arma;
-        this.arena.add(arma, 0);
-        this.arena.repaintEntidade(this);
-        System.out.println("adicionou arma");
+        if (this.arena != null) {
+            this.arena.add(arma, 0);
+            this.arena.repaintEntidade(this);
+        }
     }
 
     public void daDano(int dano) throws ExcecaoMorte {
@@ -134,8 +133,33 @@ public class Robo extends Entidade {
         return armadura;
     }
 
+    public int getJogador() {
+        return jogador;
+    }
+
+    public void setJogador(int jogador) {
+        this.jogador = jogador;
+    }
+
     public Robo clone() {
         return new Robo(nome, vida, armadura, imagem);
+    }
+
+    public ArrayList<Virus> getVirus() {
+        return virus;
+    }
+
+    public void setVirus(ArrayList<Virus> virus) {
+        this.virus = virus;
+    }
+
+    @Override
+    public void setArena(Arena arena) {
+        this.arena = arena;
+        if (this.arma != null) {
+            this.arena.add(arma, 0);
+            this.arena.repaintEntidade(this);
+        }
     }
 
 }
